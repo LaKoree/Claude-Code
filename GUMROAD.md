@@ -93,33 +93,33 @@ Sur chaque produit publié : onglet **Share** → **Copy URL** (du type
 `https://flux.gumroad.com/l/aurora`). Le morceau après `/l/` s'appelle le **permalink** et est
 personnalisable (Settings du produit).
 
-Ouvre **`index.html`**, tout en haut, et remplis le bloc :
+### ✅ Le plus simple : ton identifiant Gumroad en 1 ligne
+
+Ouvre **`index.html`**, tout en haut, et écris **juste ton identifiant Gumroad** :
 
 ```js
 window.FLUX_STORE = {
-  checkout: {
-    single:   "https://flux.gumroad.com/l/fond-unite",
-    pack:     "https://flux.gumroad.com/l/pack",        // lien par défaut d'un pack
-    lifetime: "https://flux.gumroad.com/l/collection-a-vie"
-  },
-  items: {
-    // Recommandé : un lien précis par pack (sinon "pack" ci-dessus est utilisé)
-    "Pack Aurora Boréale": "https://flux.gumroad.com/l/aurora",
-    "Pack Deep Space":     "https://flux.gumroad.com/l/deep-space",
-    // … un par pack. Et éventuellement par fond à l'unité :
-    // "Aurora Nord": "https://flux.gumroad.com/l/aurora-nord",
-  },
-  contactEmail: "ton-email@exemple.com"
+  gumroadUser: "flux",   // ← ton identifiant (ex. "flux" si ta boutique est flux.gumroad.com)
+  ...
 };
 ```
 
-Enregistre → commit → push (ou édite le fichier directement sur GitHub, crayon ✏️ → *Commit*).
-Les boutons « Acheter le pack », « Passer à vie » et « Acheter » ouvrent maintenant tes vraies pages
-de paiement. ✅
+Et c'est **tout** : tous les boutons se connectent automatiquement, à condition d'avoir donné à tes
+produits Gumroad ces **permalinks** (ils sont déjà prêts dans `GUMROAD-PRODUITS.md`) :
 
-> **Comment les boutons choisissent le lien :** un bouton de pack envoie le nom du pack ; si ce nom
-> existe dans `items`, ce lien est utilisé, sinon c'est `checkout.pack`. Pareil pour les fonds à
-> l'unité avec `checkout.single`. Donc au minimum, remplis `single`, `pack` et `lifetime`.
+| Produit | Permalink attendu |
+|---|---|
+| À l'unité | `fond-unite` |
+| Collection à vie | `collection-a-vie` |
+| Les packs | `aurora-boreale`, `deep-space`, `synthwave`, `neon-waves`, `liquid-flow`, `cyber-rain`, `hyperspace`, `magma`, `reseau`, `bokeh-dore`, `sakura`, `minimal` |
+
+Enregistre → commit → push (ou édite le fichier directement sur GitHub, crayon ✏️ → *Commit*).
+
+### Autre méthode (Stripe, ou permalinks différents)
+
+Laisse `gumroadUser` vide et colle tes liens complets dans `checkout` (`single`, `pack`, `lifetime`)
+et/ou `items` (un lien précis par pack, prioritaire). C'est utile si tu utilises Stripe ou si tu as
+choisi d'autres permalinks.
 
 ---
 

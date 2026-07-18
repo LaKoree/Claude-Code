@@ -14,23 +14,32 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════════
-   ⚙️  CONFIGURATION FLUX — COLLE ICI TES LIENS DE PAIEMENT
+   ⚙️  CONFIGURATION FLUX — CONNECTE TES PAIEMENTS EN 1 LIGNE
    ───────────────────────────────────────────────────────────────────────
-   Remplace les "" par les liens de ta boutique (Stripe Payment Link,
-   Gumroad, Lemon Squeezy, Ko-fi… n'importe quel lien de paiement marche).
-   Tant qu'un lien est vide, le bouton affiche un petit message d'aide.
-   Voir GO-LIVE.md pour le guide complet « première vente ».
+   👉 LE PLUS SIMPLE (Gumroad) : écris juste ton identifiant Gumroad dans
+      "gumroadUser" ci-dessous (ex. "flux" si ta boutique est flux.gumroad.com).
+      TOUS les boutons se connectent alors automatiquement, à condition que tes
+      permalinks Gumroad soient : fond-unite · collection-a-vie · et le slug de
+      chaque pack (aurora-boreale, deep-space, synthwave, neon-waves,
+      liquid-flow, cyber-rain, hyperspace, magma, reseau, bokeh-dore, sakura,
+      minimal). Ces permalinks sont déjà tout prêts dans GUMROAD-PRODUITS.md.
+
+   Autre prestataire (Stripe, Lemon Squeezy…) ? Laisse gumroadUser vide et colle
+   directement tes liens dans "checkout" / "items" ci-dessous.
+   Guide complet : GO-LIVE.md
    ═══════════════════════════════════════════════════════════════════════ */
 window.FLUX_STORE = {
+  gumroadUser: "",   // ← METS TON IDENTIFIANT GUMROAD ICI (ex. "flux"). C'est tout.
+
+  // Optionnel — seulement si tu N'utilises PAS gumroadUser (ex. Stripe) :
   checkout: {
     single:   "",   // Achat d'UN fond d'écran        (3,99 €)
     pack:     "",   // Un pack thématique (défaut)    (14,99 €)
     lifetime: ""    // Collection à vie               (49 € une fois)
   },
   items: {
-    // Optionnel : un lien dédié par PACK ou par FOND (sinon "pack"/"single" par défaut).
-    // "Pack Aurora Boréale": "https://ta-boutique/pack-aurora",
-    // "Aurora Nord": "https://ta-boutique/aurora-nord",
+    // Optionnel : forcer un lien précis pour un pack/fond (prioritaire sur tout le reste).
+    // "Pack Aurora Boréale": "https://…",
   },
   contactEmail: "hello@flux.store"
 };
@@ -611,7 +620,7 @@ window.FLUX_STORE = {
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Accès anticipé aux nouveautés</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Paiement unique, zéro rappel</li>
         </ul>
-        <button type="button" class="btn btn-ghost" style="width:100%;" data-buy="lifetime">Passer à vie</button>
+        <button type="button" class="btn btn-ghost" style="width:100%;" data-buy="lifetime" data-slug="collection-a-vie">Passer à vie</button>
       </div>
     </div>
   </div>
@@ -1112,18 +1121,18 @@ window.FLUX_STORE = {
 
   /* ---------- themes / packs data ---------- */
   var THEMES = [
-    { name: "Aurora Boréale", mode: "aurora", seed: 3, count: 8, price: "14,99 €", desc: "Des voiles de lumière qui ondulent dans la nuit polaire. Doux, premium, hypnotique." },
-    { name: "Deep Space", mode: "nebula", seed: 8, count: 8, price: "14,99 €", desc: "Nébuleuses profondes et poussières d'étoiles en dérive lente. Pour les rêveurs." },
-    { name: "Synthwave", mode: "grid", seed: 2, count: 6, price: "14,99 €", desc: "Grilles rétro, soleil néon, pure énergie années 80. L'ambiance rétro-gaming." },
-    { name: "Neon Waves", mode: "waves", seed: 6, count: 6, price: "14,99 €", desc: "Des vagues de néon fluides et colorées, en boucle parfaite. Zen et vibrant." },
-    { name: "Liquid Flow", mode: "flow", seed: 5, count: 6, price: "14,99 €", desc: "Des flux liquides en mouvement perpétuel. Chaque regard est différent." },
-    { name: "Cyber Rain", mode: "rain", seed: 4, count: 6, price: "14,99 €", desc: "Pluie de code verte, esprit hacker. Le thème préféré des devs et des gamers." },
-    { name: "Hyperspace", mode: "starfield", seed: 14, count: 8, price: "14,99 €", desc: "Une traversée d'étoiles à la vitesse lumière. Cosmique, immersif, hypnotique." },
-    { name: "Magma", mode: "plasma", seed: 7, count: 6, price: "14,99 €", desc: "Coulées de plasma incandescent, chaleur en fusion. Intense et vivant." },
-    { name: "Réseau", mode: "constellation", seed: 9, count: 6, price: "14,99 €", desc: "Un maillage de points connectés qui respire. Tech et épuré — idéal pour un setup dev." },
-    { name: "Bokeh Doré", mode: "bokeh", seed: 16, count: 6, price: "14,99 €", desc: "Des halos de lumière dorée qui flottent doucement. Chaleureux et premium." },
-    { name: "Sakura", mode: "sakura", seed: 23, count: 6, price: "14,99 €", desc: "Des pétales de lumière rose qui s'élèvent en silence. Doux, poétique, apaisant." },
-    { name: "Minimal", mode: "minimal", seed: 31, count: 6, price: "14,99 €", desc: "Dégradés sobres et lents, presque monochromes. Pour les amateurs d'épure." }
+    { name: "Aurora Boréale", slug: "aurora-boreale", mode: "aurora", seed: 3, count: 8, price: "14,99 €", desc: "Des voiles de lumière qui ondulent dans la nuit polaire. Doux, premium, hypnotique." },
+    { name: "Deep Space", slug: "deep-space", mode: "nebula", seed: 8, count: 8, price: "14,99 €", desc: "Nébuleuses profondes et poussières d'étoiles en dérive lente. Pour les rêveurs." },
+    { name: "Synthwave", slug: "synthwave", mode: "grid", seed: 2, count: 6, price: "14,99 €", desc: "Grilles rétro, soleil néon, pure énergie années 80. L'ambiance rétro-gaming." },
+    { name: "Neon Waves", slug: "neon-waves", mode: "waves", seed: 6, count: 6, price: "14,99 €", desc: "Des vagues de néon fluides et colorées, en boucle parfaite. Zen et vibrant." },
+    { name: "Liquid Flow", slug: "liquid-flow", mode: "flow", seed: 5, count: 6, price: "14,99 €", desc: "Des flux liquides en mouvement perpétuel. Chaque regard est différent." },
+    { name: "Cyber Rain", slug: "cyber-rain", mode: "rain", seed: 4, count: 6, price: "14,99 €", desc: "Pluie de code verte, esprit hacker. Le thème préféré des devs et des gamers." },
+    { name: "Hyperspace", slug: "hyperspace", mode: "starfield", seed: 14, count: 8, price: "14,99 €", desc: "Une traversée d'étoiles à la vitesse lumière. Cosmique, immersif, hypnotique." },
+    { name: "Magma", slug: "magma", mode: "plasma", seed: 7, count: 6, price: "14,99 €", desc: "Coulées de plasma incandescent, chaleur en fusion. Intense et vivant." },
+    { name: "Réseau", slug: "reseau", mode: "constellation", seed: 9, count: 6, price: "14,99 €", desc: "Un maillage de points connectés qui respire. Tech et épuré — idéal pour un setup dev." },
+    { name: "Bokeh Doré", slug: "bokeh-dore", mode: "bokeh", seed: 16, count: 6, price: "14,99 €", desc: "Des halos de lumière dorée qui flottent doucement. Chaleureux et premium." },
+    { name: "Sakura", slug: "sakura", mode: "sakura", seed: 23, count: 6, price: "14,99 €", desc: "Des pétales de lumière rose qui s'élèvent en silence. Doux, poétique, apaisant." },
+    { name: "Minimal", slug: "minimal", mode: "minimal", seed: 31, count: 6, price: "14,99 €", desc: "Dégradés sobres et lents, presque monochromes. Pour les amateurs d'épure." }
   ];
 
   function buildThemes() {
@@ -1146,7 +1155,7 @@ window.FLUX_STORE = {
       foot.innerHTML = '<div class="tp">' + th.price + ' <small>/ pack</small></div>';
       var b = document.createElement("button");
       b.type = "button"; b.className = "buy-pack"; b.textContent = "Acheter le pack";
-      b.setAttribute("data-buy", "pack"); b.setAttribute("data-item", "Pack " + th.name);
+      b.setAttribute("data-buy", "pack"); b.setAttribute("data-item", "Pack " + th.name); b.setAttribute("data-slug", th.slug);
       foot.appendChild(b);
       body.appendChild(foot);
       card.appendChild(body);
@@ -1177,6 +1186,7 @@ window.FLUX_STORE = {
       buyBtn.textContent = "Acheter";
       buyBtn.setAttribute("data-buy", "single");
       buyBtn.setAttribute("data-item", item.name);
+      buyBtn.setAttribute("data-slug", "fond-unite");
       meta.appendChild(buyBtn);
       tile.appendChild(meta);
       host.appendChild(tile);
@@ -1247,15 +1257,20 @@ window.FLUX_STORE = {
 
   /* ---------- checkout / buy ---------- */
   var PLAN_LABEL = { single: "ce fond", pack: "ce pack", lifetime: "la Collection à vie" };
-  function buy(kind, itemName) {
-    var store = window.FLUX_STORE || { checkout: {}, items: {} };
+  function buy(kind, itemName, slug) {
+    var store = window.FLUX_STORE || {};
     var checkout = store.checkout || {};
     var items = store.items || {};
-    var url = (itemName && items[itemName]) || checkout[kind] || (kind === "single" ? checkout.single : "");
+    // priorité : lien explicite par produit > lien explicite par offre >
+    //            lien construit automatiquement depuis ton identifiant Gumroad + slug
+    var url = (itemName && items[itemName]) || checkout[kind] || "";
+    if (!url && store.gumroadUser && slug) {
+      url = "https://" + store.gumroadUser + ".gumroad.com/l/" + slug;
+    }
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     } else {
-      toast("Paiement bientôt actif pour " + (PLAN_LABEL[kind] || "ce produit") + ". Colle ton lien de vente dans index.html (window.FLUX_STORE) — voir GO-LIVE.md.");
+      toast("Paiement bientôt actif pour " + (PLAN_LABEL[kind] || "ce produit") + ". Mets ton identifiant Gumroad dans index.html (window.FLUX_STORE.gumroadUser) — voir GO-LIVE.md.");
     }
   }
   function initBuy() {
@@ -1263,7 +1278,7 @@ window.FLUX_STORE = {
       var t = e.target.closest ? e.target.closest("[data-buy]") : null;
       if (!t) return;
       e.preventDefault();
-      buy(t.getAttribute("data-buy"), t.getAttribute("data-item"));
+      buy(t.getAttribute("data-buy"), t.getAttribute("data-item"), t.getAttribute("data-slug"));
     });
   }
 

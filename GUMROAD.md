@@ -26,17 +26,20 @@ par vente. Cher au %, mais tu ne gères ni serveur, ni livraison, ni TVA — par
 ## 2. Créer ton compte
 
 1. Va sur **gumroad.com** → **Start selling**.
-2. Inscris-toi (email + mot de passe, ou compte Google).
-3. Renseigne ton **pays = France** et le **nom de ta boutique** (ex. `FLUX`). Ça te donne une adresse
-   du type `https://flux.gumroad.com`.
-4. Confirme ton email.
+2. Inscris-toi : cet écran ne demande que ton **email + mot de passe** (ou « Continue with Google »).
+   👉 **Le pays n'est PAS ici** — il se choisit plus loin, dans les réglages de paiement (étape 3).
+3. Confirme ton email → tu arrives sur ton tableau de bord.
+4. (Optionnel) Choisis le **nom de ta boutique** (ex. `FLUX`) dans *Settings → Profile*. Ça te donne
+   une adresse du type `https://flux.gumroad.com`.
 
 ---
 
 ## 3. Configurer les paiements (pour être payé) — à faire tôt
 
-Menu **Settings → Payments** :
+Va dans **Settings** (icône ⚙️, en haut à droite) → onglet **Payments**
+*(ou directement `app.gumroad.com/settings/payments`)* :
 
+- **Pays** : dans « Where are you located? », choisis **France**. (C'est ici, pas à l'inscription.)
 - **Payout method** : renseigne ton **IBAN** (virement bancaire) ou ton **PayPal**.
 - **Informations d'identité** : nom, adresse, date de naissance (obligatoire, c'est la vérification
   légale KYC — comme pour ouvrir un compte).

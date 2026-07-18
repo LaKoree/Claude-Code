@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FLUX — Fonds d'écran dynamiques pour téléphone & PC</title>
+<meta name="description" content="FLUX crée des fonds d'écran dynamiques en 4K pour ton téléphone et ton PC. Écrans vivants, optimisés batterie, nouveaux drops chaque mois." />
+<style>
+  /* ============ TOKENS ============ */
+  :root {
+    --bg: #07080D;
+    --bg-2: #0C0E16;
+    --surface: #12141F;
+    --surface-2: #171A27;
+    --border: rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.16);
+    --text: #ECEDF4;
+    --text-2: #C4C8D8;
+    --muted: #868BA2;
+    --accent: #F5B841;
+    --accent-ink: #1A1405;
+    --accent-soft: rgba(245,184,65,0.14);
+    --screen: #06070C; /* device screens stay dark in both themes */
+    --radius: 18px;
+    --radius-sm: 12px;
+    --maxw: 1180px;
+    --ff-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --ff-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, "Cascadia Mono", Consolas, monospace;
+    --shadow: 0 30px 80px -30px rgba(0,0,0,0.65);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #F5F6FA;
+      --bg-2: #ECEEF4;
+      --surface: #FFFFFF;
+      --surface-2: #F3F4F9;
+      --border: rgba(15,20,40,0.10);
+      --border-strong: rgba(15,20,40,0.18);
+      --text: #14161F;
+      --text-2: #3A3F52;
+      --muted: #676D82;
+      --accent: #B9820F;
+      --accent-ink: #FFFFFF;
+      --accent-soft: rgba(185,130,15,0.12);
+      --shadow: 0 30px 70px -34px rgba(20,30,60,0.35);
+    }
+  }
+  /* explicit toggle overrides both directions */
+  :root[data-theme="dark"] {
+    --bg: #07080D; --bg-2: #0C0E16; --surface: #12141F; --surface-2: #171A27;
+    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.16);
+    --text: #ECEDF4; --text-2: #C4C8D8; --muted: #868BA2;
+    --accent: #F5B841; --accent-ink: #1A1405; --accent-soft: rgba(245,184,65,0.14);
+    --shadow: 0 30px 80px -30px rgba(0,0,0,0.65);
+  }
+  :root[data-theme="light"] {
+    --bg: #F5F6FA; --bg-2: #ECEEF4; --surface: #FFFFFF; --surface-2: #F3F4F9;
+    --border: rgba(15,20,40,0.10); --border-strong: rgba(15,20,40,0.18);
+    --text: #14161F; --text-2: #3A3F52; --muted: #676D82;
+    --accent: #B9820F; --accent-ink: #FFFFFF; --accent-soft: rgba(185,130,15,0.12);
+    --shadow: 0 30px 70px -34px rgba(20,30,60,0.35);
+  }
+
+  /* ============ RESET ============ */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    font-family: var(--ff-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+  /* ============ LAYOUT ============ */
+  .wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+  section { position: relative; }
+  .eyebrow {
+    font-family: var(--ff-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--accent); opacity: 0.7; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; }
+  h2.sec-title { font-size: clamp(1.9rem, 4.5vw, 3rem); }
+  .sec-lead { color: var(--muted); font-size: 1.05rem; max-width: 54ch; margin: 16px 0 0; }
+  .sec-head { margin-bottom: 46px; }
+
+  /* ============ BUTTONS ============ */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    padding: 14px 24px; border-radius: 999px; font-weight: 650; font-size: 0.98rem;
+    border: 1px solid transparent; transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+    letter-spacing: -0.01em;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 30px -10px var(--accent-soft); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -12px rgba(245,184,65,0.5); }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--border-strong); }
+  .btn-ghost:hover { transform: translateY(-2px); border-color: var(--accent); background: var(--accent-soft); }
+  @media (prefers-reduced-motion: reduce) { .btn:hover { transform: none; } }
+
+  /* ============ NAV ============ */
+  header.nav {
+    position: sticky; top: 0; z-index: 60;
+    backdrop-filter: blur(14px);
+    background: color-mix(in srgb, var(--bg) 72%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+  .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; font-size: 1.18rem; letter-spacing: -0.04em; }
+  .brand .glyph { width: 30px; height: 30px; border-radius: 9px; position: relative; overflow: hidden; box-shadow: inset 0 0 0 1px var(--border-strong); }
+  .brand .glyph canvas { width: 100%; height: 100%; display: block; }
+  .nav-links { display: flex; align-items: center; gap: 30px; }
+  .nav-links a { color: var(--text-2); font-size: 0.92rem; font-weight: 550; transition: color .15s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 14px; }
+  .theme-btn {
+    width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-2); font-size: 1rem;
+    transition: border-color .15s, color .15s;
+  }
+  .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 860px) { .nav-links { display: none; } }
+
+  /* ============ HERO ============ */
+  .hero { position: relative; overflow: hidden; padding: 92px 0 72px; }
+  #hero-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .hero::after {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(120% 90% at 20% 0%, transparent 30%, var(--bg) 82%),
+                linear-gradient(180deg, transparent 55%, var(--bg) 100%);
+  }
+  .hero .wrap { position: relative; z-index: 2; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 40px; align-items: center; }
+  .hero-copy h1 { font-size: clamp(2.5rem, 6vw, 4.4rem); }
+  .hero-copy .accent-word { color: var(--accent); }
+  .hero-sub { color: var(--text-2); font-size: 1.15rem; margin: 22px 0 0; max-width: 46ch; }
+  .hero-cta { display: flex; gap: 14px; margin-top: 32px; flex-wrap: wrap; }
+  .spec-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+  .spec {
+    font-family: var(--ff-mono); font-size: 0.72rem; letter-spacing: 0.08em;
+    padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 60%, transparent); color: var(--text-2);
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .spec b { color: var(--accent); font-weight: 700; }
+
+  /* ============ PHONE MOCKUP ============ */
+  .device-stage { position: relative; display: flex; justify-content: center; align-items: center; min-height: 460px; }
+  .phone {
+    position: relative; width: 244px; aspect-ratio: 9 / 19.5; border-radius: 38px;
+    background: #111; padding: 9px; box-shadow: var(--shadow), 0 0 0 2px rgba(255,255,255,0.05);
+    z-index: 3;
+  }
+  .phone .screen { position: relative; width: 100%; height: 100%; border-radius: 30px; overflow: hidden; background: var(--screen); }
+  .phone .screen canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .phone .notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 74px; height: 20px; background: #0a0a0a; border-radius: 12px; z-index: 4; }
+  .phone .ui-time { position: absolute; z-index: 4; top: 58px; left: 0; right: 0; text-align: center; font-weight: 300; font-size: 3.1rem; color: #fff; letter-spacing: -0.03em; text-shadow: 0 2px 20px rgba(0,0,0,0.5); font-variant-numeric: tabular-nums; }
+  .phone .ui-date { position: absolute; z-index: 4; top: 132px; left: 0; right: 0; text-align: center; color: rgba(255,255,255,0.85); font-size: 0.82rem; font-weight: 500; }
+  .float-card {
+    position: absolute; z-index: 4; background: color-mix(in srgb, var(--surface) 88%, transparent);
+    border: 1px solid var(--border-strong); border-radius: 14px; padding: 12px 15px; box-shadow: var(--shadow);
+    backdrop-filter: blur(10px); font-size: 0.82rem;
+  }
+  .float-card .fc-mono { font-family: var(--ff-mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.06em; }
+  .float-card .fc-main { font-weight: 700; margin-top: 3px; letter-spacing: -0.02em; }
+  .fc-a { top: 30px; left: -8px; }
+  .fc-b { bottom: 44px; right: -14px; }
+  .fc-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #37D67A; margin-right: 6px; box-shadow: 0 0 8px #37D67A; }
+  @media (max-width: 900px) {
+    .hero .wrap { grid-template-columns: 1fr; }
+    .device-stage { min-height: 420px; margin-top: 12px; }
+  }
+
+  /* ============ MARQUEE ============ */
+  .marquee { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--bg-2); overflow: hidden; padding: 16px 0; }
+  .marquee-track { display: flex; gap: 44px; white-space: nowrap; animation: scroll 26s linear infinite; width: max-content; }
+  .marquee span { font-family: var(--ff-mono); font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); display: inline-flex; align-items: center; gap: 44px; }
+  .marquee span::after { content: "✦"; color: var(--accent); }
+  @keyframes scroll { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .marquee-track { animation: none; } }
+
+  /* ============ GENERIC SECTION SPACING ============ */
+  .band { padding: 96px 0; }
+  .band-alt { background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+  /* ============ GALLERY ============ */
+  .gal-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 34px; }
+  .tabs { display: inline-flex; gap: 6px; padding: 5px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; }
+  .tab { padding: 8px 17px; border-radius: 999px; border: none; background: transparent; color: var(--muted); font-weight: 600; font-size: 0.88rem; transition: all .16s; }
+  .tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 820px) { .gallery { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .gallery { grid-template-columns: 1fr; } }
+  .tile {
+    position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);
+    background: var(--screen); transition: transform .25s ease, border-color .25s ease;
+    box-shadow: var(--shadow);
+  }
+  .tile.phone-ratio { aspect-ratio: 3 / 4; }
+  .tile.pc-ratio { aspect-ratio: 16 / 10; }
+  .tile:hover { transform: translateY(-5px); border-color: var(--border-strong); }
+  @media (prefers-reduced-motion: reduce) { .tile:hover { transform: none; } }
+  .tile canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .tile .meta {
+    position: absolute; inset: auto 0 0 0; z-index: 2; padding: 16px 16px 14px;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+    background: linear-gradient(0deg, rgba(4,5,10,0.85), transparent);
+  }
+  .tile .meta .t-name { font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+  .tile .meta .t-spec { font-family: var(--ff-mono); font-size: 0.64rem; letter-spacing: 0.08em; color: rgba(255,255,255,0.7); margin-top: 2px; }
+  .tile .badge {
+    position: absolute; top: 12px; left: 12px; z-index: 2; font-family: var(--ff-mono);
+    font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px;
+    border-radius: 6px; background: rgba(4,5,10,0.6); color: #fff; border: 1px solid rgba(255,255,255,0.18);
+  }
+  .tile .price-pill {
+    position: absolute; top: 12px; right: 12px; z-index: 2; font-weight: 700; font-size: 0.78rem;
+    padding: 5px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
+  }
+  .tile.hidden { display: none; }
+
+  /* ============ FEATURES ============ */
+  .feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  @media (max-width: 900px) { .feat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .feat-grid { grid-template-columns: 1fr; } }
+  .feat {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 26px 22px; transition: border-color .2s, transform .2s;
+  }
+  .feat:hover { border-color: var(--border-strong); transform: translateY(-3px); }
+  @media (prefers-reduced-motion: reduce) { .feat:hover { transform: none; } }
+  .feat .ficon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 16px; }
+  .feat h3 { font-size: 1.1rem; margin-bottom: 8px; }
+  .feat p { color: var(--muted); font-size: 0.94rem; margin: 0; }
+
+  /* ============ STEPS ============ */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; counter-reset: step; }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+  .step { position: relative; padding-top: 20px; border-top: 1px solid var(--border-strong); }
+  .step .num { font-family: var(--ff-mono); font-size: 0.8rem; color: var(--accent); letter-spacing: 0.1em; }
+  .step h3 { font-size: 1.25rem; margin: 14px 0 8px; }
+  .step p { color: var(--muted); margin: 0; font-size: 0.96rem; }
+
+  /* ============ PRICING ============ */
+  .price-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: stretch; }
+  @media (max-width: 860px) { .price-grid { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; } }
+  .plan {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 30px 26px; display: flex; flex-direction: column;
+  }
+  .plan.featured { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), var(--shadow); position: relative; }
+  .plan .tag { font-family: var(--ff-mono); font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .plan.featured .tag { color: var(--accent); }
+  .plan .price { font-size: 2.7rem; font-weight: 800; letter-spacing: -0.04em; margin: 12px 0 2px; }
+  .plan .price small { font-size: 0.95rem; font-weight: 500; color: var(--muted); letter-spacing: 0; }
+  .plan .plan-sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px; }
+  .plan ul { list-style: none; padding: 0; margin: 0 0 26px; display: flex; flex-direction: column; gap: 11px; flex: 1; }
+  .plan li { display: flex; gap: 10px; font-size: 0.93rem; color: var(--text-2); }
+  .plan li svg { flex-shrink: 0; color: var(--accent); margin-top: 3px; }
+  .ribbon { position: absolute; top: 18px; right: 18px; background: var(--accent); color: var(--accent-ink); font-size: 0.68rem; font-weight: 800; padding: 4px 11px; border-radius: 999px; letter-spacing: 0.04em; }
+
+  /* ============ TESTIMONIALS ============ */
+  .quotes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 860px) { .quotes { grid-template-columns: 1fr; } }
+  .quote { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .quote .stars { color: var(--accent); letter-spacing: 2px; font-size: 0.9rem; }
+  .quote p { margin: 0; font-size: 1rem; color: var(--text); }
+  .quote .who { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+  .quote .av { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; box-shadow: inset 0 0 0 1px var(--border-strong); }
+  .quote .av canvas { width: 100%; height: 100%; display: block; }
+  .quote .who b { font-size: 0.9rem; }
+  .quote .who span { font-size: 0.78rem; color: var(--muted); display: block; }
+
+  /* ============ FAQ ============ */
+  .faq { max-width: 780px; margin: 0 auto; border-top: 1px solid var(--border); }
+  .faq details { border-bottom: 1px solid var(--border); }
+  .faq summary { list-style: none; cursor: pointer; padding: 22px 4px; display: flex; justify-content: space-between; align-items: center; gap: 20px; font-weight: 650; font-size: 1.05rem; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary .plus { flex-shrink: 0; width: 24px; height: 24px; position: relative; transition: transform .2s; }
+  .faq summary .plus::before, .faq summary .plus::after { content: ""; position: absolute; background: var(--accent); border-radius: 2px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+  .faq summary .plus::before { width: 14px; height: 2px; }
+  .faq summary .plus::after { width: 2px; height: 14px; transition: transform .2s; }
+  .faq details[open] summary .plus::after { transform: translate(-50%,-50%) scaleY(0); }
+  .faq p { margin: 0 4px 22px; color: var(--muted); }
+
+  /* ============ FINAL CTA ============ */
+  .cta-final { position: relative; overflow: hidden; border-radius: 26px; padding: 68px 40px; text-align: center; background: var(--screen); border: 1px solid var(--border-strong); }
+  .cta-final canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .cta-final::after { content: ""; position: absolute; inset: 0; z-index: 1; background: radial-gradient(90% 120% at 50% 50%, transparent 20%, rgba(4,5,10,0.6) 80%); }
+  .cta-final > * { position: relative; z-index: 2; }
+  .cta-final h2 { font-size: clamp(2rem, 5vw, 3.2rem); color: #fff; }
+  .cta-final p { color: rgba(255,255,255,0.82); max-width: 48ch; margin: 16px auto 30px; font-size: 1.1rem; }
+
+  /* ============ FOOTER ============ */
+  footer.site { border-top: 1px solid var(--border); padding: 54px 0 40px; background: var(--bg-2); }
+  .foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 30px; }
+  @media (max-width: 760px) { .foot-grid { grid-template-columns: 1fr 1fr; gap: 26px; } }
+  .foot-grid h4 { font-family: var(--ff-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin: 0 0 16px; font-weight: 600; }
+  .foot-grid a { display: block; color: var(--text-2); font-size: 0.9rem; margin-bottom: 10px; transition: color .15s; }
+  .foot-grid a:hover { color: var(--accent); }
+  .foot-blurb { color: var(--muted); font-size: 0.92rem; max-width: 34ch; margin: 14px 0 0; }
+  .foot-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 46px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.82rem; }
+  .foot-bottom .ff-mono { font-family: var(--ff-mono); letter-spacing: 0.06em; }
+
+  /* ============ REVEAL ANIMATION ============ */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="FLUX accueil">
+      <span class="glyph"><canvas data-mode="aurora" data-seed="7" width="60" height="60"></canvas></span>
+      FLUX
+    </a>
+    <nav class="nav-links" aria-label="Navigation principale">
+      <a href="#galerie">Galerie</a>
+      <a href="#pourquoi">Pourquoi FLUX</a>
+      <a href="#tarifs">Tarifs</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-right">
+      <button class="theme-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
+      <a href="#tarifs" class="btn btn-primary" style="padding:11px 20px;">Choisir mon pass</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <canvas id="hero-canvas" data-mode="hero"></canvas>
+  <div class="wrap">
+    <div class="hero-copy reveal">
+      <span class="eyebrow">Fonds d'écran dynamiques · Téléphone & PC</span>
+      <h1>Ton écran,<br /><span class="accent-word">en mouvement.</span></h1>
+      <p class="hero-sub">Des fonds d'écran vivants en 4K qui réagissent, respirent et bougent — pensés pour ton téléphone et ton PC. Zéro fond figé. Zéro écran qui ressemble à celui du voisin.</p>
+      <div class="hero-cta">
+        <a href="#galerie" class="btn btn-primary">Explorer la galerie →</a>
+        <a href="#tarifs" class="btn btn-ghost">Voir les tarifs</a>
+      </div>
+      <div class="spec-row">
+        <span class="spec"><b>4K</b> Ultra HD</span>
+        <span class="spec"><b>120</b> FPS fluide</span>
+        <span class="spec"><b>HDR</b> couleurs vraies</span>
+        <span class="spec"><b>−0%</b> batterie inutile</span>
+      </div>
+    </div>
+    <div class="device-stage reveal">
+      <div class="float-card fc-a">
+        <div class="fc-mono">NOUVEAU DROP</div>
+        <div class="fc-main">Aurora Nord · 4K</div>
+      </div>
+      <div class="phone" aria-hidden="true">
+        <div class="notch"></div>
+        <div class="ui-time" id="phoneClock">21:47</div>
+        <div class="ui-date" id="phoneDate">Vendredi 18 juillet</div>
+        <div class="screen"><canvas data-mode="aurora" data-seed="3"></canvas></div>
+      </div>
+      <div class="float-card fc-b">
+        <div class="fc-mono"><span class="fc-dot"></span>SYNC TÉLÉPHONE · PC</div>
+        <div class="fc-main">Appliqué partout</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MARQUEE ============ -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Aurora</span><span>Nébuleuse</span><span>Ondes néon</span><span>Grille rétro</span><span>Pluie de code</span><span>Flux liquide</span>
+    <span>Aurora</span><span>Nébuleuse</span><span>Ondes néon</span><span>Grille rétro</span><span>Pluie de code</span><span>Flux liquide</span>
+  </div>
+</div>
+
+<!-- ============ GALLERY ============ -->
+<section class="band" id="galerie">
+  <div class="wrap">
+    <div class="gal-top">
+      <div class="sec-head reveal" style="margin-bottom:0;">
+        <span class="eyebrow">La collection</span>
+        <h2 class="sec-title">Des écrans qui prennent vie.</h2>
+        <p class="sec-lead">Chaque fond est rendu en direct — ce que tu vois ici, c'est ce que tu obtiens sur ton appareil. Filtre par support.</p>
+      </div>
+      <div class="tabs reveal" role="tablist" aria-label="Filtrer la galerie">
+        <button class="tab" role="tab" aria-selected="true" data-filter="all">Tous</button>
+        <button class="tab" role="tab" aria-selected="false" data-filter="phone">Téléphone</button>
+        <button class="tab" role="tab" aria-selected="false" data-filter="pc">PC</button>
+      </div>
+    </div>
+    <div class="gallery" id="gallery"><!-- injected by JS --></div>
+  </div>
+</section>
+
+<!-- ============ FEATURES / POURQUOI ============ -->
+<section class="band band-alt" id="pourquoi">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Pensé pour ton setup</span>
+      <h2 class="sec-title">Beau à regarder. Léger à faire tourner.</h2>
+      <p class="sec-lead">Un fond animé ne devrait jamais te coûter ton autonomie ni ta fluidité. On optimise chaque pixel.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat reveal">
+        <div class="ficon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="16" height="10" rx="2"/><line x1="22" y1="11" x2="22" y2="13"/><line x1="6" y1="11" x2="6" y2="13"/></svg>
+        </div>
+        <h3>Optimisé batterie</h3>
+        <p>Rendu intelligent qui se met en pause quand l'écran dort. Ton autonomie reste intacte.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ficon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg>
+        </div>
+        <h3>Vrai 4K · 120 FPS</h3>
+        <p>Des dégradés propres et un mouvement soyeux, du petit écran jusqu'à ton moniteur ultrawide.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ficon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="12" height="8" rx="1.5"/><rect x="9" y="11" width="13" height="9" rx="1.5"/></svg>
+        </div>
+        <h3>Sync téléphone + PC</h3>
+        <p>Un seul achat, tes deux écrans assortis. On te livre chaque format automatiquement.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="ficon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1L12 16.6 5.7 21l2.3-7.1-6-4.5h7.6z"/></svg>
+        </div>
+        <h3>Nouveaux drops chaque mois</h3>
+        <p>Le Pass débloque des créations exclusives, ajoutées en continu. Jamais deux fois le même mur.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STEPS ============ -->
+<section class="band">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Comment ça marche</span>
+      <h2 class="sec-title">Trois étapes, écran transformé.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="num">ÉTAPE 01</div>
+        <h3>Choisis ton style</h3>
+        <p>Parcours la galerie, prévisualise en direct et repère le fond qui te ressemble — pour ton téléphone, ton PC, ou les deux.</p>
+      </div>
+      <div class="step reveal">
+        <div class="num">ÉTAPE 02</div>
+        <h3>Télécharge en un clic</h3>
+        <p>On te livre le fichier animé optimisé pour ton appareil exact — format téléphone vertical et format PC large inclus.</p>
+      </div>
+      <div class="step reveal">
+        <div class="num">ÉTAPE 03</div>
+        <h3>Applique et profite</h3>
+        <p>Guide d'installation en 30 secondes pour iOS, Android, Windows et macOS. Ton écran prend vie immédiatement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section class="band band-alt" id="tarifs">
+  <div class="wrap">
+    <div class="sec-head reveal" style="text-align:center; display:flex; flex-direction:column; align-items:center;">
+      <span class="eyebrow">Tarifs sans engagement</span>
+      <h2 class="sec-title">Choisis ton niveau de flux.</h2>
+      <p class="sec-lead" style="text-align:center;">Un fond à l'unité pour tester, ou un Pass pour tout débloquer. Paiement unique, pas d'abonnement caché.</p>
+    </div>
+    <div class="price-grid">
+      <div class="plan reveal">
+        <span class="tag">À l'unité</span>
+        <div class="price">3,99 €<small> / fond</small></div>
+        <p class="plan-sub">Parfait pour un coup de cœur.</p>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>1 fond dynamique en 4K</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Formats téléphone + PC inclus</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Licence perso à vie</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Guide d'installation</li>
+        </ul>
+        <a href="#galerie" class="btn btn-ghost" style="width:100%;">Choisir un fond</a>
+      </div>
+      <div class="plan featured reveal">
+        <span class="ribbon">Le + choisi</span>
+        <span class="tag">Pass Mensuel</span>
+        <div class="price">6,99 €<small> / mois</small></div>
+        <p class="plan-sub">Toute la collection, toujours neuve.</p>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Accès illimité à toute la galerie</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Nouveaux drops exclusifs chaque mois</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Sync téléphone + PC automatique</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Résiliable en un clic</li>
+        </ul>
+        <a href="#top" class="btn btn-primary" style="width:100%;">Démarrer le Pass</a>
+      </div>
+      <div class="plan reveal">
+        <span class="tag">Pass à vie</span>
+        <div class="price">49 €<small> / une fois</small></div>
+        <p class="plan-sub">Tu payes une fois, c'est à toi.</p>
+        <ul>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Tout le Pass Mensuel, pour toujours</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Tous les futurs drops inclus</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Accès anticipé aux nouveautés</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Zéro abonnement, zéro rappel</li>
+        </ul>
+        <a href="#top" class="btn btn-ghost" style="width:100%;">Passer à vie</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="band">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Ils ont réveillé leur écran</span>
+      <h2 class="sec-title">4,9/5 — et des écrans qui font parler.</h2>
+    </div>
+    <div class="quotes">
+      <div class="quote reveal">
+        <div class="stars">★★★★★</div>
+        <p>« Tout le monde me demande comment j'ai fait bouger mon fond d'écran. La sync téléphone-PC c'est exactement ce que je cherchais. »</p>
+        <div class="who">
+          <span class="av"><canvas data-mode="avatar" data-seed="11" width="80" height="80"></canvas></span>
+          <div><b>Nmaël R.</b><span>Étudiant · gamer</span></div>
+        </div>
+      </div>
+      <div class="quote reveal">
+        <div class="stars">★★★★★</div>
+        <p>« J'avais peur pour la batterie, franchement zéro différence. Et le rendu en 4K sur mon ultrawide est dingue. »</p>
+        <div class="who">
+          <span class="av"><canvas data-mode="avatar" data-seed="24" width="80" height="80"></canvas></span>
+          <div><b>Inès T.</b><span>Créatrice de contenu</span></div>
+        </div>
+      </div>
+      <div class="quote reveal">
+        <div class="stars">★★★★★</div>
+        <p>« Le Pass à vie vaut chaque centime. Un nouveau drop tous les mois, mon écran change d'ambiance sans que je m'en occupe. »</p>
+        <div class="who">
+          <span class="av"><canvas data-mode="avatar" data-seed="42" width="80" height="80"></canvas></span>
+          <div><b>Karim B.</b><span>Dev · setup addict</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="band band-alt" id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal" style="text-align:center; display:flex; flex-direction:column; align-items:center;">
+      <span class="eyebrow">Questions fréquentes</span>
+      <h2 class="sec-title">Tout ce qu'il faut savoir.</h2>
+    </div>
+    <div class="faq reveal">
+      <details open>
+        <summary>Ça marche sur quels appareils ?<span class="plus"></span></summary>
+        <p>iPhone (iOS 16+), Android (12+), Windows 10/11 et macOS. Chaque fond est livré en format vertical pour téléphone et en format large pour PC, prêt à appliquer.</p>
+      </details>
+      <details>
+        <summary>Est-ce que ça vide vraiment la batterie ?<span class="plus"></span></summary>
+        <p>Non. Nos fonds se mettent en pause dès que l'écran s'éteint ou qu'une app plein écran s'ouvre. L'impact sur l'autonomie est négligeable dans un usage normal.</p>
+      </details>
+      <details>
+        <summary>La différence entre le Pass Mensuel et le Pass à vie ?<span class="plus"></span></summary>
+        <p>Le Pass Mensuel débloque toute la collection tant que tu es abonné (résiliable en un clic). Le Pass à vie, c'est un paiement unique : tu gardes l'accès et tous les futurs drops pour toujours.</p>
+      </details>
+      <details>
+        <summary>Je peux les utiliser sur téléphone ET PC ?<span class="plus"></span></summary>
+        <p>Oui, et c'est le principe. Chaque achat inclut les deux formats pour que ton setup soit assorti d'un écran à l'autre.</p>
+      </details>
+      <details>
+        <summary>Et si un fond ne me plaît pas ?<span class="plus"></span></summary>
+        <p>Satisfait ou remboursé sous 14 jours sur tout achat à l'unité. Pour les Pass, tu peux résilier quand tu veux, sans justification.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="band" style="padding-top:0;">
+  <div class="wrap">
+    <div class="cta-final reveal">
+      <canvas data-mode="hero" data-seed="9"></canvas>
+      <h2>Ton prochain écran t'attend.</h2>
+      <p>Rejoins les milliers de setups qui ont troqué le fond figé contre un écran vivant. Ça prend 30 secondes.</p>
+      <a href="#tarifs" class="btn btn-primary" style="padding:16px 30px; font-size:1.05rem;">Réveiller mon écran →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="#top" style="font-size:1.3rem;">
+          <span class="glyph"><canvas data-mode="aurora" data-seed="15" width="60" height="60"></canvas></span>
+          FLUX
+        </a>
+        <p class="foot-blurb">Des fonds d'écran dynamiques en 4K pour donner vie à ton téléphone et à ton PC. Fait avec obsession du détail.</p>
+      </div>
+      <div>
+        <h4>Produit</h4>
+        <a href="#galerie">Galerie</a>
+        <a href="#tarifs">Tarifs</a>
+        <a href="#pourquoi">Fonctionnalités</a>
+        <a href="#top">Nouveaux drops</a>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <a href="#faq">FAQ</a>
+        <a href="#top">Guide d'installation</a>
+        <a href="#top">Nous contacter</a>
+        <a href="#top">Remboursement</a>
+      </div>
+      <div>
+        <h4>Suivre</h4>
+        <a href="#top">Instagram</a>
+        <a href="#top">TikTok</a>
+        <a href="#top">Discord</a>
+        <a href="#top">Newsletter</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 FLUX. Ton écran, en mouvement.</span>
+      <span class="ff-mono">4K · 120FPS · HDR · MADE FOR SCREENS</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- tiny seeded RNG ---------- */
+  function rng(seed) {
+    var s = seed >>> 0 || 1;
+    return function () {
+      s ^= s << 13; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
+      return s / 4294967296;
+    };
+  }
+
+  /* ---------- palettes per mode ---------- */
+  var PALETTES = {
+    aurora:  [[46,196,182],[110,86,255],[245,184,65],[255,94,120]],
+    nebula:  [[124,58,237],[236,72,153],[59,130,246],[16,185,129]],
+    waves:   [[245,184,65],[255,120,80],[110,86,255]],
+    flow:    [[46,196,182],[245,184,65],[255,94,168]],
+    grid:    [[255,94,168],[110,200,255],[245,184,65]],
+    rain:    [[80,255,170],[46,196,182]],
+    hero:    [[110,86,255],[46,196,182],[245,184,65],[255,94,120]]
+  };
+
+  /* ---------- canvas registry (one shared loop) ---------- */
+  var scenes = [];
+  var running = new Set();
+
+  function fit(canvas) {
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.6);
+    var r = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(r.width * dpr));
+    var h = Math.max(1, Math.round(r.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    return dpr;
+  }
+
+  function makeScene(canvas) {
+    var mode = canvas.getAttribute("data-mode") || "aurora";
+    var seed = parseInt(canvas.getAttribute("data-seed") || "1", 10);
+    var ctx = canvas.getContext("2d");
+    var rnd = rng(seed * 2654435761);
+    var pal = PALETTES[mode] || PALETTES.aurora;
+    var blobs = [], particles = [], drops = [];
+
+    // init per mode
+    for (var i = 0; i < 5; i++) {
+      blobs.push({
+        x: rnd(), y: rnd(),
+        vx: (rnd() - 0.5) * 0.0009, vy: (rnd() - 0.5) * 0.0009,
+        r: 0.35 + rnd() * 0.4, c: pal[i % pal.length], ph: rnd() * 6.28
+      });
+    }
+    for (var p = 0; p < 46; p++) {
+      particles.push({ x: rnd(), y: rnd(), a: rnd() * 6.28, sp: 0.0006 + rnd() * 0.0014, c: pal[p % pal.length], sz: 0.5 + rnd() * 1.8 });
+    }
+    for (var d = 0; d < 26; d++) {
+      drops.push({ x: rnd(), y: rnd(), sp: 0.003 + rnd() * 0.01, len: 0.05 + rnd() * 0.12 });
+    }
+
+    function draw(t) {
+      var dpr = fit(canvas);
+      var W = canvas.width, H = canvas.height;
+      var pr = rgb(pal[0]);
+
+      if (mode === "grid") { drawGrid(); return; }
+      if (mode === "rain") { drawRain(); return; }
+      if (mode === "waves") { drawWaves(); return; }
+      if (mode === "avatar") { drawAvatar(); return; }
+      if (mode === "flow") { drawFlow(); return; }
+      // default: aurora / nebula / hero -> metaball-ish blobs
+      drawBlobs(mode === "hero" ? 0.85 : 1);
+
+      function rgb(c, a) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (a == null ? 1 : a) + ")"; }
+
+      function drawBlobs(scale) {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = "#06070C"; ctx.fillRect(0, 0, W, H);
+        ctx.globalCompositeOperation = "lighter";
+        for (var i = 0; i < blobs.length; i++) {
+          var b = blobs[i];
+          b.x += b.vx; b.y += b.vy;
+          if (b.x < -0.2 || b.x > 1.2) b.vx *= -1;
+          if (b.y < -0.2 || b.y > 1.2) b.vy *= -1;
+          var wobble = Math.sin(t * 0.0004 + b.ph) * 0.06;
+          var cx = (b.x + wobble) * W, cy = (b.y - wobble) * H;
+          var rad = b.r * Math.min(W, H) * scale;
+          var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+          g.addColorStop(0, rgb(b.c, 0.55));
+          g.addColorStop(0.5, rgb(b.c, 0.18));
+          g.addColorStop(1, rgb(b.c, 0));
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 6.2832); ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      }
+
+      function drawFlow() {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = "rgba(6,7,12,0.16)"; ctx.fillRect(0, 0, W, H);
+        ctx.globalCompositeOperation = "lighter";
+        for (var i = 0; i < particles.length; i++) {
+          var pt = particles[i];
+          var ang = Math.sin(pt.x * 6 + t * 0.0003) * Math.cos(pt.y * 6 - t * 0.0002) * 3.14;
+          pt.x += Math.cos(ang) * pt.sp; pt.y += Math.sin(ang) * pt.sp;
+          if (pt.x < 0) pt.x = 1; if (pt.x > 1) pt.x = 0;
+          if (pt.y < 0) pt.y = 1; if (pt.y > 1) pt.y = 0;
+          ctx.fillStyle = rgb(pt.c, 0.9);
+          ctx.beginPath(); ctx.arc(pt.x * W, pt.y * H, pt.sz * dpr, 0, 6.2832); ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      }
+
+      function drawWaves() {
+        var g0 = ctx.createLinearGradient(0, 0, 0, H);
+        g0.addColorStop(0, "#0a0a16"); g0.addColorStop(1, "#06070C");
+        ctx.fillStyle = g0; ctx.fillRect(0, 0, W, H);
+        ctx.globalCompositeOperation = "lighter";
+        for (var l = 0; l < pal.length; l++) {
+          ctx.beginPath();
+          ctx.moveTo(0, H);
+          for (var x = 0; x <= W; x += 8 * dpr) {
+            var y = H * (0.4 + l * 0.11)
+              + Math.sin(x * 0.006 / dpr + t * 0.0011 + l) * H * 0.09
+              + Math.sin(x * 0.013 / dpr - t * 0.0007 + l * 2) * H * 0.05;
+            ctx.lineTo(x, y);
+          }
+          ctx.lineTo(W, H); ctx.closePath();
+          var c = pal[l % pal.length];
+          ctx.fillStyle = "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0.22)";
+          ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      }
+
+      function drawGrid() {
+        var g0 = ctx.createLinearGradient(0, 0, 0, H);
+        g0.addColorStop(0, "#14081f"); g0.addColorStop(0.5, "#0a0616"); g0.addColorStop(1, "#06070C");
+        ctx.fillStyle = g0; ctx.fillRect(0, 0, W, H);
+        // sun glow
+        var sg = ctx.createRadialGradient(W/2, H*0.42, 0, W/2, H*0.42, H*0.4);
+        var c0 = pal[0];
+        sg.addColorStop(0, "rgba(" + c0[0] + "," + c0[1] + "," + c0[2] + ",0.5)");
+        sg.addColorStop(1, "rgba(" + c0[0] + "," + c0[1] + "," + c0[2] + ",0)");
+        ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
+        var hz = H * 0.55;
+        var c1 = pal[1];
+        ctx.strokeStyle = "rgba(" + c1[0] + "," + c1[1] + "," + c1[2] + ",0.5)";
+        ctx.lineWidth = 1 * dpr;
+        // horizontal moving lines (perspective)
+        var off = (t * 0.00018) % 1;
+        for (var i = 0; i < 16; i++) {
+          var f = (i + off) / 16;
+          var y = hz + (H - hz) * f * f;
+          ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.globalAlpha = f; ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        // vertical lines converge to center
+        for (var v = -10; v <= 10; v++) {
+          ctx.beginPath();
+          ctx.moveTo(W/2 + v * (W/9), H);
+          ctx.lineTo(W/2 + v * (W/60), hz);
+          ctx.stroke();
+        }
+      }
+
+      function drawRain() {
+        ctx.fillStyle = "rgba(4,7,6,0.22)"; ctx.fillRect(0, 0, W, H);
+        var c = pal[0];
+        for (var i = 0; i < drops.length; i++) {
+          var d = drops[i];
+          d.y += d.sp;
+          if (d.y > 1 + d.len) { d.y = -d.len; d.x = Math.floor(rnd() * 30) / 30; }
+          var x = d.x * W;
+          var g = ctx.createLinearGradient(x, (d.y - d.len) * H, x, d.y * H);
+          g.addColorStop(0, "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0)");
+          g.addColorStop(1, "rgba(" + c[0] + "," + c[1] + "," + c[2] + ",0.85)");
+          ctx.strokeStyle = g; ctx.lineWidth = 1.6 * dpr;
+          ctx.beginPath(); ctx.moveTo(x, (d.y - d.len) * H); ctx.lineTo(x, d.y * H); ctx.stroke();
+          ctx.fillStyle = "rgba(200,255,225,0.9)";
+          ctx.fillRect(x - dpr, d.y * H - 2 * dpr, 2.4 * dpr, 3 * dpr);
+        }
+      }
+
+      function drawAvatar() {
+        var c1 = pal[0], c2 = pal[1] || pal[0];
+        var g = ctx.createLinearGradient(0, 0, W, H);
+        g.addColorStop(0, "rgb(" + c1.join(",") + ")");
+        g.addColorStop(1, "rgb(" + c2.join(",") + ")");
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        ctx.globalCompositeOperation = "lighter";
+        for (var i = 0; i < 3; i++) {
+          var cx = (0.3 + rnd() * 0.4) * W, cy = (0.3 + rnd() * 0.4) * H;
+          var rad = (0.3 + rnd() * 0.3) * W;
+          var rg = ctx.createRadialGradient(cx, cy, 0, cx, cy, rad);
+          rg.addColorStop(0, "rgba(255,255,255,0.35)"); rg.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(cx, cy, rad, 0, 6.2832); ctx.fill();
+        }
+        ctx.globalCompositeOperation = "source-over";
+      }
+    }
+
+    return { canvas: canvas, mode: mode, draw: draw, static: (mode === "avatar") };
+  }
+
+  /* ---------- shared animation loop ---------- */
+  var last = 0;
+  function loop(now) {
+    if (!last) last = now;
+    // throttle to ~40fps for battery friendliness
+    if (now - last >= 24) {
+      running.forEach(function (sc) { try { sc.draw(now); } catch (e) {} });
+      last = now;
+    }
+    if (!reduceMotion) requestAnimationFrame(loop);
+  }
+
+  /* ---------- visibility control ---------- */
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      var sc = en.target.__scene;
+      if (!sc) return;
+      if (en.isIntersecting) {
+        if (sc.static || reduceMotion) { sc.draw(performance.now()); }
+        else running.add(sc);
+      } else {
+        running.delete(sc);
+      }
+    });
+  }, { rootMargin: "80px" });
+
+  function register(canvas) {
+    var sc = makeScene(canvas);
+    canvas.__scene = sc;
+    scenes.push(sc);
+    io.observe(canvas);
+  }
+
+  /* ---------- gallery data ---------- */
+  var GALLERY = [
+    { name: "Aurora Nord", mode: "aurora", seed: 3, cat: "phone", spec: "4K · 60FPS", price: "3,99 €", badge: "Best-seller" },
+    { name: "Nébuleuse Ultrawide", mode: "nebula", seed: 8, cat: "pc", spec: "5K · 120FPS", price: "4,99 €", badge: "" },
+    { name: "Flux liquide", mode: "flow", seed: 5, cat: "phone", spec: "4K · 60FPS", price: "3,99 €", badge: "Nouveau" },
+    { name: "Grille rétro", mode: "grid", seed: 2, cat: "pc", spec: "4K · 60FPS", price: "4,99 €", badge: "" },
+    { name: "Ondes néon", mode: "waves", seed: 6, cat: "phone", spec: "4K · 120FPS", price: "3,99 €", badge: "" },
+    { name: "Pluie de code", mode: "rain", seed: 4, cat: "pc", spec: "4K · 60FPS", price: "4,99 €", badge: "Pass" },
+    { name: "Aurora Corail", mode: "aurora", seed: 12, cat: "pc", spec: "5K · 120FPS", price: "4,99 €", badge: "" },
+    { name: "Nébuleuse de poche", mode: "nebula", seed: 19, cat: "phone", spec: "4K · 60FPS", price: "3,99 €", badge: "Nouveau" },
+    { name: "Flux solaire", mode: "flow", seed: 21, cat: "phone", spec: "4K · 120FPS", price: "3,99 €", badge: "" }
+  ];
+
+  function buildGallery() {
+    var host = document.getElementById("gallery");
+    if (!host) return;
+    GALLERY.forEach(function (item) {
+      var tile = document.createElement("article");
+      tile.className = "tile " + (item.cat === "pc" ? "pc-ratio" : "phone-ratio");
+      tile.setAttribute("data-cat", item.cat);
+      var cv = document.createElement("canvas");
+      cv.setAttribute("data-mode", item.mode);
+      cv.setAttribute("data-seed", item.seed);
+      tile.appendChild(cv);
+      if (item.badge) {
+        var bd = document.createElement("span"); bd.className = "badge"; bd.textContent = item.badge; tile.appendChild(bd);
+      }
+      var pp = document.createElement("span"); pp.className = "price-pill"; pp.textContent = item.price; tile.appendChild(pp);
+      var meta = document.createElement("div"); meta.className = "meta";
+      meta.innerHTML = '<div><div class="t-name">' + item.name + '</div><div class="t-spec">' + item.spec + ' · ' + (item.cat === "pc" ? "PC" : "TÉLÉPHONE") + '</div></div>';
+      tile.appendChild(meta);
+      host.appendChild(tile);
+      register(cv);
+    });
+  }
+
+  /* ---------- filters ---------- */
+  function initTabs() {
+    var tabs = document.querySelectorAll(".tab");
+    tabs.forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        tabs.forEach(function (t) { t.setAttribute("aria-selected", "false"); });
+        tab.setAttribute("aria-selected", "true");
+        var f = tab.getAttribute("data-filter");
+        document.querySelectorAll(".tile").forEach(function (tile) {
+          var show = (f === "all" || tile.getAttribute("data-cat") === f);
+          tile.classList.toggle("hidden", !show);
+        });
+      });
+    });
+  }
+
+  /* ---------- clock ---------- */
+  function tickClock() {
+    var el = document.getElementById("phoneClock");
+    var de = document.getElementById("phoneDate");
+    if (!el) return;
+    var now = new Date();
+    var hh = String(now.getHours()).padStart(2, "0");
+    var mm = String(now.getMinutes()).padStart(2, "0");
+    el.textContent = hh + ":" + mm;
+    if (de) {
+      var days = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+      var months = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+      de.textContent = days[now.getDay()] + " " + now.getDate() + " " + months[now.getMonth()];
+    }
+  }
+
+  /* ---------- reveal on scroll ---------- */
+  function initReveal() {
+    if (reduceMotion) { document.querySelectorAll(".reveal").forEach(function (e) { e.classList.add("in"); }); return; }
+    var ro = new IntersectionObserver(function (ents) {
+      ents.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add("in"); ro.unobserve(en.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll(".reveal").forEach(function (e) { ro.observe(e); });
+  }
+
+  /* ---------- theme toggle ---------- */
+  function initTheme() {
+    var btn = document.getElementById("themeBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var cur = document.documentElement.getAttribute("data-theme");
+      var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var isDark = cur ? cur === "dark" : prefersDark;
+      document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+    });
+  }
+
+  /* ---------- boot ---------- */
+  function boot() {
+    buildGallery();
+    document.querySelectorAll("canvas[data-mode]").forEach(function (cv) {
+      if (!cv.__scene) register(cv);
+    });
+    initTabs();
+    initReveal();
+    initTheme();
+    tickClock();
+    setInterval(tickClock, 15000);
+    window.addEventListener("resize", function () {
+      running.forEach(function (sc) { try { sc.draw(performance.now()); } catch (e) {} });
+    });
+    if (reduceMotion) {
+      scenes.forEach(function (sc) { try { sc.draw(performance.now()); } catch (e) {} });
+    } else {
+      requestAnimationFrame(loop);
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+</script>
+</body>
+</html>

@@ -44,30 +44,36 @@ puis tu le colles dans `index.html`. Chaque bouton du site ouvre alors la vraie 
 ### Exemple avec Gumroad (le plus rapide)
 
 1. Crée un compte sur **gumroad.com** → *Start selling*.
-2. **New product → Digital product**. Crée 3 produits qui correspondent aux offres du site :
+2. **New product → Digital product** (aucun abonnement, tout est en paiement unique).
+   Crée les produits qui correspondent aux offres du site :
    - « Fond d'écran FLUX (à l'unité) » — **3,99 €**
-   - « Pass FLUX Mensuel » — **6,99 €** (abonnement / *membership*)
-   - « Pass FLUX à vie » — **49 €**
+   - **Un produit par pack thématique** — **14,99 €** chacun
+     (Pack Aurora Boréale, Pack Deep Space, Pack Synthwave, Pack Neon Waves, Pack Liquid Flow, Pack Cyber Rain)
+   - « Collection FLUX à vie » — **49 €**
+   > Astuce : commence avec 1 ou 2 packs seulement, tu ajouteras les autres plus tard.
 3. Pour chaque produit, **téléverse le(s) fichier(s)** à livrer (voir Étape 3), publie, puis copie l'**URL du produit**
-   (ex. `https://tonnom.gumroad.com/l/pass-mensuel`).
+   (ex. `https://tonnom.gumroad.com/l/pack-aurora`).
 4. Ouvre **`index.html`** et colle ces URLs dans le bloc de config en haut du fichier :
 
    ```js
    window.FLUX_STORE = {
      checkout: {
        single:   "https://tonnom.gumroad.com/l/fond-unite",
-       monthly:  "https://tonnom.gumroad.com/l/pass-mensuel",
-       lifetime: "https://tonnom.gumroad.com/l/pass-a-vie"
+       pack:     "https://tonnom.gumroad.com/l/pack",       // lien par défaut d'un pack
+       lifetime: "https://tonnom.gumroad.com/l/collection-a-vie"
      },
      items: {
-       // Optionnel : un lien précis par fond, sinon "single" est utilisé
+       // Recommandé : un lien précis par pack (sinon le lien "pack" ci-dessus est utilisé)
+       "Pack Aurora Boréale": "https://tonnom.gumroad.com/l/pack-aurora",
+       "Pack Deep Space":     "https://tonnom.gumroad.com/l/pack-deep-space",
+       // … idem pour les autres packs, et éventuellement par fond à l'unité :
        // "Aurora Nord": "https://tonnom.gumroad.com/l/aurora-nord",
      },
      contactEmail: "ton-email@exemple.com"
    };
    ```
 
-5. Enregistre, commit/push. **C'est tout** : les boutons « Démarrer le Pass », « Passer à vie »
+5. Enregistre, commit/push. **C'est tout** : les boutons « Acheter le pack », « Passer à vie »
    et « Acheter » sur chaque fond ouvrent désormais ta vraie page de paiement.
 
 > Le même principe marche avec Stripe (crée des *Payment Links*) ou Lemon Squeezy :

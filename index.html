@@ -24,11 +24,12 @@
 window.FLUX_STORE = {
   checkout: {
     single:   "",   // Achat d'UN fond d'écran        (3,99 €)
-    monthly:  "",   // Pass Mensuel                    (6,99 €/mois)
-    lifetime: ""    // Pass à vie                      (49 € une fois)
+    pack:     "",   // Un pack thématique (défaut)    (14,99 €)
+    lifetime: ""    // Collection à vie               (49 € une fois)
   },
   items: {
-    // Optionnel : un lien dédié par fond (sinon on utilise "single").
+    // Optionnel : un lien dédié par PACK ou par FOND (sinon "pack"/"single" par défaut).
+    // "Pack Aurora Boréale": "https://ta-boutique/pack-aurora",
     // "Aurora Nord": "https://ta-boutique/aurora-nord",
   },
   contactEmail: "hello@flux.store"
@@ -279,6 +280,37 @@ window.FLUX_STORE = {
   .toast.show { opacity: 1; transform: none; }
   .toast .dot { color: var(--accent); font-size: 1.1rem; line-height: 1.2; }
 
+  /* ============ THEMES / PACKS ============ */
+  .themes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 820px) { .themes-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .themes-grid { grid-template-columns: 1fr; } }
+  .theme-card {
+    display: flex; flex-direction: column; border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--border); background: var(--surface); transition: transform .25s ease, border-color .25s ease;
+  }
+  .theme-card:hover { transform: translateY(-5px); border-color: var(--border-strong); }
+  @media (prefers-reduced-motion: reduce) { .theme-card:hover { transform: none; } }
+  .theme-preview { position: relative; aspect-ratio: 16 / 9; background: var(--screen); overflow: hidden; }
+  .theme-preview canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .theme-preview .count {
+    position: absolute; top: 12px; left: 12px; z-index: 2; font-family: var(--ff-mono);
+    font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 9px;
+    border-radius: 6px; background: rgba(4,5,10,0.62); color: #fff; border: 1px solid rgba(255,255,255,0.18);
+  }
+  .theme-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .theme-body h3 { font-size: 1.18rem; }
+  .theme-body p { color: var(--muted); font-size: 0.9rem; margin: 0; flex: 1; }
+  .theme-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+  .theme-foot .tp { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; }
+  .theme-foot .tp small { font-weight: 500; font-size: 0.78rem; color: var(--muted); letter-spacing: 0; }
+  .theme-foot .buy-pack {
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+    font-weight: 650; font-size: 0.86rem; padding: 9px 16px; border-radius: 999px;
+    transition: transform .16s, box-shadow .16s; white-space: nowrap;
+  }
+  .theme-foot .buy-pack:hover { transform: translateY(-2px); box-shadow: 0 12px 26px -10px rgba(245,184,65,0.5); }
+  @media (prefers-reduced-motion: reduce) { .theme-foot .buy-pack:hover { transform: none; } }
+
   /* ============ FEATURES ============ */
   .feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
   @media (max-width: 900px) { .feat-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -379,13 +411,13 @@ window.FLUX_STORE = {
     </a>
     <nav class="nav-links" aria-label="Navigation principale">
       <a href="#galerie">Galerie</a>
-      <a href="#pourquoi">Pourquoi FLUX</a>
+      <a href="#themes">Thèmes</a>
       <a href="#tarifs">Tarifs</a>
       <a href="#faq">FAQ</a>
     </nav>
     <div class="nav-right">
       <button class="theme-btn" id="themeBtn" aria-label="Changer de thème" title="Changer de thème">◐</button>
-      <a href="#tarifs" class="btn btn-primary" style="padding:11px 20px;">Choisir mon pass</a>
+      <a href="#tarifs" class="btn btn-primary" style="padding:11px 20px;">Voir les offres</a>
     </div>
   </div>
 </header>
@@ -455,6 +487,18 @@ window.FLUX_STORE = {
   </div>
 </section>
 
+<!-- ============ THEMES / PACKS ============ -->
+<section class="band band-alt" id="themes">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Packs par thème · 14,99 €</span>
+      <h2 class="sec-title">Un univers complet, d'un coup.</h2>
+      <p class="sec-lead">Chaque pack réunit 6 à 8 fonds assortis d'un même thème — téléphone et PC inclus. Bien plus malin que de les prendre à l'unité.</p>
+    </div>
+    <div class="themes-grid" id="themesGrid"><!-- injected by JS --></div>
+  </div>
+</section>
+
 <!-- ============ FEATURES / POURQUOI ============ -->
 <section class="band band-alt" id="pourquoi">
   <div class="wrap">
@@ -490,7 +534,7 @@ window.FLUX_STORE = {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.5 2.3 7.1L12 16.6 5.7 21l2.3-7.1-6-4.5h7.6z"/></svg>
         </div>
         <h3>Nouveaux drops chaque mois</h3>
-        <p>Le Pass débloque des créations exclusives, ajoutées en continu. Jamais deux fois le même mur.</p>
+        <p>La Collection à vie débloque chaque nouvelle création, ajoutée en continu. Jamais deux fois le même mur.</p>
       </div>
     </div>
   </div>
@@ -527,9 +571,9 @@ window.FLUX_STORE = {
 <section class="band band-alt" id="tarifs">
   <div class="wrap">
     <div class="sec-head reveal" style="text-align:center; display:flex; flex-direction:column; align-items:center;">
-      <span class="eyebrow">Tarifs sans engagement</span>
+      <span class="eyebrow">Paiement unique · zéro abonnement</span>
       <h2 class="sec-title">Choisis ton niveau de flux.</h2>
-      <p class="sec-lead" style="text-align:center;">Un fond à l'unité pour tester, ou un Pass pour tout débloquer. Paiement unique, pas d'abonnement caché.</p>
+      <p class="sec-lead" style="text-align:center;">Un fond à l'unité pour tester, un pack pour un thème complet, ou toute la collection à vie. Tu payes une fois, c'est à toi pour toujours.</p>
     </div>
     <div class="price-grid">
       <div class="plan reveal">
@@ -545,27 +589,27 @@ window.FLUX_STORE = {
         <a href="#galerie" class="btn btn-ghost" style="width:100%;">Choisir un fond</a>
       </div>
       <div class="plan featured reveal">
-        <span class="ribbon">Le + choisi</span>
-        <span class="tag">Pass Mensuel</span>
-        <div class="price">6,99 €<small> / mois</small></div>
-        <p class="plan-sub">Toute la collection, toujours neuve.</p>
+        <span class="ribbon">Le + populaire</span>
+        <span class="tag">Pack thématique</span>
+        <div class="price">14,99 €<small> / pack</small></div>
+        <p class="plan-sub">Un thème complet, assorti.</p>
         <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Accès illimité à toute la galerie</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Nouveaux drops exclusifs chaque mois</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Sync téléphone + PC automatique</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Résiliable en un clic</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>6 à 8 fonds d'un même univers</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Formats téléphone + PC pour chacun</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Nouveaux fonds du thème offerts</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>~65 % d'économie vs à l'unité</li>
         </ul>
-        <button type="button" class="btn btn-primary" style="width:100%;" data-buy="monthly">Démarrer le Pass</button>
+        <a href="#themes" class="btn btn-primary" style="width:100%;">Voir les packs</a>
       </div>
       <div class="plan reveal">
-        <span class="tag">Pass à vie</span>
+        <span class="tag">Collection à vie</span>
         <div class="price">49 €<small> / une fois</small></div>
-        <p class="plan-sub">Tu payes une fois, c'est à toi.</p>
+        <p class="plan-sub">Tout, pour toujours.</p>
         <ul>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Tout le Pass Mensuel, pour toujours</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Tous les thèmes actuels débloqués</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Tous les futurs drops inclus</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Accès anticipé aux nouveautés</li>
-          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Zéro abonnement, zéro rappel</li>
+          <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Paiement unique, zéro rappel</li>
         </ul>
         <button type="button" class="btn btn-ghost" style="width:100%;" data-buy="lifetime">Passer à vie</button>
       </div>
@@ -626,8 +670,8 @@ window.FLUX_STORE = {
         <p>Non. Nos fonds se mettent en pause dès que l'écran s'éteint ou qu'une app plein écran s'ouvre. L'impact sur l'autonomie est négligeable dans un usage normal.</p>
       </details>
       <details>
-        <summary>La différence entre le Pass Mensuel et le Pass à vie ?<span class="plus"></span></summary>
-        <p>Le Pass Mensuel débloque toute la collection tant que tu es abonné (résiliable en un clic). Le Pass à vie, c'est un paiement unique : tu gardes l'accès et tous les futurs drops pour toujours.</p>
+        <summary>La différence entre un pack et la Collection à vie ?<span class="plus"></span></summary>
+        <p>Un pack te donne tous les fonds d'un thème précis (ex. Aurora Boréale). La Collection à vie débloque en un seul paiement TOUS les thèmes actuels et tous les futurs drops — c'est le meilleur rapport qualité-prix si tu aimes plusieurs univers.</p>
       </details>
       <details>
         <summary>Je peux les utiliser sur téléphone ET PC ?<span class="plus"></span></summary>
@@ -635,7 +679,7 @@ window.FLUX_STORE = {
       </details>
       <details>
         <summary>Et si un fond ne me plaît pas ?<span class="plus"></span></summary>
-        <p>Satisfait ou remboursé sous 14 jours sur tout achat à l'unité. Pour les Pass, tu peux résilier quand tu veux, sans justification.</p>
+        <p>Satisfait ou remboursé sous 14 jours sur tous les achats. Un simple message suffit, sans justification. Aucun abonnement : tu payes une fois, sans rappel ni prélèvement récurrent.</p>
       </details>
     </div>
   </div>
@@ -931,11 +975,53 @@ window.FLUX_STORE = {
     { name: "Flux liquide", mode: "flow", seed: 5, cat: "phone", spec: "4K · 60FPS", price: "3,99 €", badge: "Nouveau" },
     { name: "Grille rétro", mode: "grid", seed: 2, cat: "pc", spec: "4K · 60FPS", price: "4,99 €", badge: "" },
     { name: "Ondes néon", mode: "waves", seed: 6, cat: "phone", spec: "4K · 120FPS", price: "3,99 €", badge: "" },
-    { name: "Pluie de code", mode: "rain", seed: 4, cat: "pc", spec: "4K · 60FPS", price: "4,99 €", badge: "Pass" },
+    { name: "Pluie de code", mode: "rain", seed: 4, cat: "pc", spec: "4K · 60FPS", price: "4,99 €", badge: "Populaire" },
     { name: "Aurora Corail", mode: "aurora", seed: 12, cat: "pc", spec: "5K · 120FPS", price: "4,99 €", badge: "" },
     { name: "Nébuleuse de poche", mode: "nebula", seed: 19, cat: "phone", spec: "4K · 60FPS", price: "3,99 €", badge: "Nouveau" },
-    { name: "Flux solaire", mode: "flow", seed: 21, cat: "phone", spec: "4K · 120FPS", price: "3,99 €", badge: "" }
+    { name: "Flux solaire", mode: "flow", seed: 21, cat: "phone", spec: "4K · 120FPS", price: "3,99 €", badge: "" },
+    { name: "Synthwave Sunset", mode: "grid", seed: 27, cat: "phone", spec: "4K · 60FPS", price: "3,99 €", badge: "" },
+    { name: "Vagues profondes", mode: "waves", seed: 33, cat: "pc", spec: "5K · 120FPS", price: "4,99 €", badge: "Nouveau" },
+    { name: "Matrix Ultrawide", mode: "rain", seed: 38, cat: "pc", spec: "5K · 60FPS", price: "4,99 €", badge: "" }
   ];
+
+  /* ---------- themes / packs data ---------- */
+  var THEMES = [
+    { name: "Aurora Boréale", mode: "aurora", seed: 3, count: 8, price: "14,99 €", desc: "Des voiles de lumière qui ondulent dans la nuit polaire. Doux, premium, hypnotique." },
+    { name: "Deep Space", mode: "nebula", seed: 8, count: 8, price: "14,99 €", desc: "Nébuleuses profondes et poussières d'étoiles en dérive lente. Pour les rêveurs." },
+    { name: "Synthwave", mode: "grid", seed: 2, count: 6, price: "14,99 €", desc: "Grilles rétro, soleil néon, pure énergie années 80. L'ambiance rétro-gaming." },
+    { name: "Neon Waves", mode: "waves", seed: 6, count: 6, price: "14,99 €", desc: "Des vagues de néon fluides et colorées, en boucle parfaite. Zen et vibrant." },
+    { name: "Liquid Flow", mode: "flow", seed: 5, count: 6, price: "14,99 €", desc: "Des flux liquides en mouvement perpétuel. Chaque regard est différent." },
+    { name: "Cyber Rain", mode: "rain", seed: 4, count: 6, price: "14,99 €", desc: "Pluie de code verte, esprit hacker. Le thème préféré des devs et des gamers." }
+  ];
+
+  function buildThemes() {
+    var host = document.getElementById("themesGrid");
+    if (!host) return;
+    THEMES.forEach(function (th) {
+      var card = document.createElement("article");
+      card.className = "theme-card";
+      var prev = document.createElement("div"); prev.className = "theme-preview";
+      var cv = document.createElement("canvas");
+      cv.setAttribute("data-mode", th.mode); cv.setAttribute("data-seed", th.seed);
+      prev.appendChild(cv);
+      var cnt = document.createElement("span"); cnt.className = "count";
+      cnt.textContent = th.count + " fonds · tél + pc"; prev.appendChild(cnt);
+      card.appendChild(prev);
+      var body = document.createElement("div"); body.className = "theme-body";
+      var h = document.createElement("h3"); h.textContent = "Pack " + th.name; body.appendChild(h);
+      var p = document.createElement("p"); p.textContent = th.desc; body.appendChild(p);
+      var foot = document.createElement("div"); foot.className = "theme-foot";
+      foot.innerHTML = '<div class="tp">' + th.price + ' <small>/ pack</small></div>';
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "buy-pack"; b.textContent = "Acheter le pack";
+      b.setAttribute("data-buy", "pack"); b.setAttribute("data-item", "Pack " + th.name);
+      foot.appendChild(b);
+      body.appendChild(foot);
+      card.appendChild(body);
+      host.appendChild(card);
+      register(cv);
+    });
+  }
 
   function buildGallery() {
     var host = document.getElementById("gallery");
@@ -1028,7 +1114,7 @@ window.FLUX_STORE = {
   }
 
   /* ---------- checkout / buy ---------- */
-  var PLAN_LABEL = { single: "ce fond", monthly: "le Pass Mensuel", lifetime: "le Pass à vie" };
+  var PLAN_LABEL = { single: "ce fond", pack: "ce pack", lifetime: "la Collection à vie" };
   function buy(kind, itemName) {
     var store = window.FLUX_STORE || { checkout: {}, items: {} };
     var checkout = store.checkout || {};
@@ -1064,6 +1150,7 @@ window.FLUX_STORE = {
   /* ---------- boot ---------- */
   function boot() {
     buildGallery();
+    buildThemes();
     document.querySelectorAll("canvas[data-mode]").forEach(function (cv) {
       if (!cv.__scene) register(cv);
     });

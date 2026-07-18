@@ -58,7 +58,8 @@ avant qu'elles ne bloquent l'achat.
 ## 6. Structure de la page
 
 Héros live (le produit *est* la démo) → bandeau défilant → galerie filtrable (rendus en direct) →
-pourquoi FLUX (4 atouts) → 3 étapes → tarifs (unité / mensuel / à vie) → avis → FAQ → CTA final → footer.
+packs par thème → pourquoi FLUX (4 atouts) → 3 étapes → tarifs (unité / pack / collection à vie,
+paiement unique, sans abonnement) → avis → FAQ → CTA final → footer.
 
 ## 7. Technique
 

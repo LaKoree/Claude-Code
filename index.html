@@ -5,6 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FLUX — Fonds d'écran dynamiques pour téléphone & PC</title>
 <meta name="description" content="FLUX crée des fonds d'écran dynamiques en 4K pour ton téléphone et ton PC. Écrans vivants, optimisés batterie, nouveaux drops chaque mois." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2307080D'/%3E%3Ccircle cx='50' cy='50' r='26' fill='none' stroke='%23F5B841' stroke-width='8'/%3E%3C/svg%3E" />
+<!-- Open Graph / partage sur les réseaux -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="FLUX — Ton écran, en mouvement." />
+<meta property="og:description" content="Des fonds d'écran dynamiques en 4K pour téléphone et PC. Écrans vivants, optimisés batterie, nouveaux drops chaque mois." />
+<meta name="twitter:card" content="summary_large_image" />
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   ⚙️  CONFIGURATION FLUX — COLLE ICI TES LIENS DE PAIEMENT
+   ───────────────────────────────────────────────────────────────────────
+   Remplace les "" par les liens de ta boutique (Stripe Payment Link,
+   Gumroad, Lemon Squeezy, Ko-fi… n'importe quel lien de paiement marche).
+   Tant qu'un lien est vide, le bouton affiche un petit message d'aide.
+   Voir GO-LIVE.md pour le guide complet « première vente ».
+   ═══════════════════════════════════════════════════════════════════════ */
+window.FLUX_STORE = {
+  checkout: {
+    single:   "",   // Achat d'UN fond d'écran        (3,99 €)
+    monthly:  "",   // Pass Mensuel                    (6,99 €/mois)
+    lifetime: ""    // Pass à vie                      (49 € une fois)
+  },
+  items: {
+    // Optionnel : un lien dédié par fond (sinon on utilise "single").
+    // "Aurora Nord": "https://ta-boutique/aurora-nord",
+  },
+  contactEmail: "hello@flux.store"
+};
+</script>
 <style>
   /* ============ TOKENS ============ */
   :root {
@@ -231,7 +260,24 @@
     position: absolute; top: 12px; right: 12px; z-index: 2; font-weight: 700; font-size: 0.78rem;
     padding: 5px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
   }
+  .tile .buy {
+    border: 1px solid rgba(255,255,255,0.35); background: rgba(255,255,255,0.12); color: #fff;
+    font-weight: 650; font-size: 0.78rem; padding: 8px 14px; border-radius: 999px;
+    backdrop-filter: blur(6px); transition: background .16s, transform .16s; white-space: nowrap;
+  }
+  .tile .buy:hover { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); transform: translateY(-1px); }
   .tile.hidden { display: none; }
+
+  /* ============ TOAST ============ */
+  .toast-wrap { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: min(92vw, 460px); }
+  .toast {
+    background: var(--surface); color: var(--text); border: 1px solid var(--border-strong);
+    border-radius: 12px; padding: 13px 16px; box-shadow: var(--shadow); font-size: 0.9rem;
+    display: flex; gap: 10px; align-items: flex-start; opacity: 0; transform: translateY(12px);
+    transition: opacity .25s, transform .25s; pointer-events: auto;
+  }
+  .toast.show { opacity: 1; transform: none; }
+  .toast .dot { color: var(--accent); font-size: 1.1rem; line-height: 1.2; }
 
   /* ============ FEATURES ============ */
   .feat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
@@ -509,7 +555,7 @@
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Sync téléphone + PC automatique</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Résiliable en un clic</li>
         </ul>
-        <a href="#top" class="btn btn-primary" style="width:100%;">Démarrer le Pass</a>
+        <button type="button" class="btn btn-primary" style="width:100%;" data-buy="monthly">Démarrer le Pass</button>
       </div>
       <div class="plan reveal">
         <span class="tag">Pass à vie</span>
@@ -521,7 +567,7 @@
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Accès anticipé aux nouveautés</li>
           <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>Zéro abonnement, zéro rappel</li>
         </ul>
-        <a href="#top" class="btn btn-ghost" style="width:100%;">Passer à vie</a>
+        <button type="button" class="btn btn-ghost" style="width:100%;" data-buy="lifetime">Passer à vie</button>
       </div>
     </div>
   </div>
@@ -915,6 +961,12 @@
       var pp = document.createElement("span"); pp.className = "price-pill"; pp.textContent = item.price; tile.appendChild(pp);
       var meta = document.createElement("div"); meta.className = "meta";
       meta.innerHTML = '<div><div class="t-name">' + item.name + '</div><div class="t-spec">' + item.spec + ' · ' + (item.cat === "pc" ? "PC" : "TÉLÉPHONE") + '</div></div>';
+      var buyBtn = document.createElement("button");
+      buyBtn.type = "button"; buyBtn.className = "buy";
+      buyBtn.textContent = "Acheter";
+      buyBtn.setAttribute("data-buy", "single");
+      buyBtn.setAttribute("data-item", item.name);
+      meta.appendChild(buyBtn);
       tile.appendChild(meta);
       host.appendChild(tile);
       register(cv);
@@ -962,6 +1014,48 @@
     document.querySelectorAll(".reveal").forEach(function (e) { ro.observe(e); });
   }
 
+  /* ---------- toast ---------- */
+  var toastHost;
+  function toast(msg) {
+    if (!toastHost) {
+      toastHost = document.createElement("div");
+      toastHost.className = "toast-wrap";
+      document.body.appendChild(toastHost);
+    }
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.innerHTML = '<span class="dot">●</span><span></span>';
+    el.lastChild.textContent = msg;
+    toastHost.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add("show"); });
+    setTimeout(function () {
+      el.classList.remove("show");
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+    }, 4200);
+  }
+
+  /* ---------- checkout / buy ---------- */
+  var PLAN_LABEL = { single: "ce fond", monthly: "le Pass Mensuel", lifetime: "le Pass à vie" };
+  function buy(kind, itemName) {
+    var store = window.FLUX_STORE || { checkout: {}, items: {} };
+    var checkout = store.checkout || {};
+    var items = store.items || {};
+    var url = (itemName && items[itemName]) || checkout[kind] || (kind === "single" ? checkout.single : "");
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      toast("Paiement bientôt actif pour " + (PLAN_LABEL[kind] || "ce produit") + ". Colle ton lien de vente dans index.html (window.FLUX_STORE) — voir GO-LIVE.md.");
+    }
+  }
+  function initBuy() {
+    document.body.addEventListener("click", function (e) {
+      var t = e.target.closest ? e.target.closest("[data-buy]") : null;
+      if (!t) return;
+      e.preventDefault();
+      buy(t.getAttribute("data-buy"), t.getAttribute("data-item"));
+    });
+  }
+
   /* ---------- theme toggle ---------- */
   function initTheme() {
     var btn = document.getElementById("themeBtn");
@@ -983,6 +1077,7 @@
     initTabs();
     initReveal();
     initTheme();
+    initBuy();
     tickClock();
     setInterval(tickClock, 15000);
     window.addEventListener("resize", function () {
